@@ -1,21 +1,18 @@
 ﻿
 using API.MQTT;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using MQTTnet;
 
 namespace API.Schedular;
 
 public sealed class MqttBackgroundService(
-    ILogger<MqttBackgroundService> logger, 
+    ILogger<MqttBackgroundService> logger,
     IConfiguration configuration,
     IServiceScopeFactory scopeFactory,
     MqttMessageDispatcher dispatcher
     )
     : BackgroundService
 {
-    
+
     private readonly TimeSpan _retryInterval = TimeSpan.FromSeconds(5);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -23,16 +20,16 @@ public sealed class MqttBackgroundService(
         var factory = new MqttClientFactory();
         using var client = factory.CreateMqttClient();
 
-        var host = configuration["Mqtt:Host"] ?? throw new ArgumentException("Mqtt:Host is missing.");
-        var port = configuration.GetValue<int>("Mqtt:Port");
-        
+        var host = Environment.GetEnvironmentVariable("MQTT__HOST") ?? throw new ArgumentException("Mqtt:Host is missing.");
+        var port = int.Parse(Environment.GetEnvironmentVariable("MQTT__PORT") ?? "1883");
+
         var username = Environment.GetEnvironmentVariable("MQTT__USERNAME");
         var password = Environment.GetEnvironmentVariable("MQTT__PASSWORD");
-        
+
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             throw new ArgumentException("MQTT__USERNAME or MQTT__PASSWORD is missing.");
-        
-        var clientId = configuration["Mqtt:ClientId"] ?? throw new ArgumentException("Mqtt:ClientId is missing.");
+
+        var clientId = Environment.GetEnvironmentVariable("MQTT__CLIENTID") ?? throw new ArgumentException("Mqtt:ClientId is missing.");
 
         var topics = GetSubscribedTopics();
 
@@ -53,7 +50,7 @@ public sealed class MqttBackgroundService(
             var topic = args.ApplicationMessage.Topic;
             var payload = args.ApplicationMessage.ConvertPayloadToString();
             // logger.LogInformation("Received [{topic}]: {payload}", topic, payload);
-            
+
             try
             {
                 var message = new MqttMessage(topic, payload);
@@ -104,7 +101,7 @@ public sealed class MqttBackgroundService(
                     {
                         if ((int)item.ResultCode >= 0x80)
                             throw new InvalidOperationException($"Subscription rejected: {item.TopicFilter.Topic}");
-                        
+
                         logger.LogInformation("Subscribed to {Topic}", item.TopicFilter.Topic);
                     }
                 }
@@ -116,7 +113,7 @@ public sealed class MqttBackgroundService(
             catch (Exception ex)
             {
                 logger.LogWarning(ex, "MQTT connection/subscription failed. Retrying in 5 seconds.");
-                
+
                 // Force a new connection and resubscription
                 // if subscribing failed after connecting.
                 if (client.IsConnected)
@@ -157,7 +154,7 @@ public sealed class MqttBackgroundService(
 
         logger.LogInformation("MQTT background service stopped.");
     }
-    
+
     private string[] GetSubscribedTopics()
     {
         using var scope = scopeFactory.CreateScope();

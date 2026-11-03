@@ -1,0 +1,14 @@
+services:
+  backend:
+    container_name: mqtt-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8010:8081"
+    environment:
+      - MQTT__CLIENTID=
+      - MQTT__HOST=
+      # - MQTT__PORT=1883
+      - MQTT__USERNAME=
+      - MQTT__PASSWORD=
