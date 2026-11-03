@@ -1,0 +1,19 @@
+bin/
+obj/
+/packages/
+
+# JetBrains Rider / IntelliJ Idea
+.idea/
+*.sln.iml
+*.suo
+*.user
+riderModule.iml
+/_ReSharper.Caches/
+
+# Visual Studio & VS Code
+.vs/
+.vscode/
+
+# Windows system files
+Thumbs.db
+Desktop.ini
