@@ -7,8 +7,7 @@ services:
     ports:
       - "8010:8081"
     environment:
-      - MQTT__CLIENTID=
-      - MQTT__HOST=
-      # - MQTT__PORT=1883
-      - MQTT__USERNAME=
-      - MQTT__PASSWORD=
+      - MQTT__CLIENTID=dotnet-backend
+      - MQTT__HOST=host.docker.internal
+      - MQTT__USERNAME=mubarak
+      - MQTT__PASSWORD=mubarak123
